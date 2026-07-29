@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moon Star Tailors — Order & Measurement Tracker</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌙</text></svg>">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS v3 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night':       '#0a0a0f',
+            'night-light': '#12121a',
+            'night-card':  '#1a1a2e',
+            'gold':        '#c9a84c',
+            'gold-light':  '#e8d5a3',
+            'gold-dark':   '#8a6f2f',
+            'warm':        '#f5f0e8',
+            'muted':       '#a09882',
+          },
+          fontFamily: {
+            'display': ['"Playfair Display"', 'Georgia', 'serif'],
+            'body':    ['"Inter"', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    body {
+      background-color: #0a0a0f;
+      color: #f5f0e8;
+      font-family: 'Inter', sans-serif;
+    }
+    .gold-border { border-color: rgba(201, 168, 76, 0.2); }
+    .gold-glow { box-shadow: 0 0 20px rgba(201, 168, 76, 0.15); }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0a0f; }
+    ::-webkit-scrollbar-thumb { background: #c9a84c44; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-night text-warm min-h-screen flex flex-col antialiased selection:bg-gold selection:text-night">
+
+  <!-- Header / Navigation -->
+  <header class="bg-night-light border-b border-gold/20 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <span class="text-xl">🌙⭐</span>
+          <span class="font-display font-bold text-gold text-lg">Moon Star</span>
+        </a>
+        <span class="text-xs bg-gold/10 text-gold-light border border-gold/20 px-2.5 py-0.5 rounded-full font-mono">Shop Order Manager</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="exportData()" title="Backup Data" class="text-xs bg-night-card hover:bg-gold/10 text-gold border border-gold/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors">
+          <span>💾 Backup</span>
+        </button>
+        <label title="Restore Backup" class="text-xs bg-night-card hover:bg-gold/10 text-muted hover:text-gold border border-gold/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer transition-colors">
+          <span>📥 Restore</span>
+          <input type="file" id="import-file" accept=".json" class="hidden" onchange="importData(event)">
+        </label>
+        <button onclick="openNewOrderModal()" class="text-xs sm:text-sm bg-gold hover:bg-gold-light text-night font-bold px-3.5 py-1.5 rounded-lg transition-all shadow-md shadow-gold/10 flex items-center gap-1">
+          <span>+ New Order</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Body -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+    
+    <!-- Quick Stats Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-night-card border border-gold/10 rounded-xl p-4">
+        <span class="text-xs text-muted font-medium uppercase tracking-wider">Total Active</span>
+        <div class="text-2xl font-bold text-warm mt-1" id="stat-total">0</div>
+      </div>
+      <div class="bg-night-card border border-gold/10 rounded-xl p-4">
+        <span class="text-xs text-muted font-medium uppercase tracking-wider">In Stitching 🧵</span>
+        <div class="text-2xl font-bold text-gold mt-1" id="stat-stitching">0</div>
+      </div>
+      <div class="bg-night-card border border-gold/10 rounded-xl p-4">
+        <span class="text-xs text-muted font-medium uppercase tracking-wider">Ready for Trial 👔</span>
+        <div class="text-2xl font-bold text-green-400 mt-1" id="stat-ready">0</div>
+      </div>
+      <div class="bg-night-card border border-gold/10 rounded-xl p-4">
+        <span class="text-xs text-muted font-medium uppercase tracking-wider">Pending Balance 💰</span>
+        <div class="text-2xl font-bold text-gold-light mt-1" id="stat-balance">₹0</div>
+      </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="bg-night-light border border-gold/15 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+      <!-- Search Input -->
+      <div class="relative w-full md:w-80">
+        <input type="text" id="search-input" onkeyup="renderOrders()" placeholder="Search by customer name, phone, or order #..." class="w-full bg-night border border-gold/20 text-warm placeholder-muted text-sm rounded-lg pl-9 pr-4 py-2 focus:outline-none focus:border-gold transition-colors">
+        <span class="absolute left-3 top-2.5 text-muted text-sm">🔍</span>
+      </div>
+
+      <!-- Filter Controls -->
+      <div class="flex flex-wrap gap-2 w-full md:w-auto items-center">
+        <select id="status-filter" onchange="renderOrders()" class="bg-night border border-gold/20 text-warm text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-gold">
+          <option value="ALL">All Statuses</option>
+          <option value="Received">Received 📥</option>
+          <option value="Cutting">Cutting ✂️</option>
+          <option value="Stitching">Stitching 🧵</option>
+          <option value="Ready">Ready for Pickup 👔</option>
+          <option value="Delivered">Delivered ✅</option>
+        </select>
+
+        <select id="sort-filter" onchange="renderOrders()" class="bg-night border border-gold/20 text-warm text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-gold">
+          <option value="dueDate">Sort by Due Date</option>
+          <option value="newest">Sort by Newest</option>
+          <option value="name">Sort by Customer Name</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Orders Table / List -->
+    <div class="bg-night-card border border-gold/15 rounded-xl overflow-hidden shadow-xl">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-night-light border-b border-gold/15 text-gold-light uppercase text-xs tracking-wider">
+            <tr>
+              <th class="py-3.5 px-4">Order #</th>
+              <th class="py-3.5 px-4">Customer</th>
+              <th class="py-3.5 px-4">Garments</th>
+              <th class="py-3.5 px-4">Due Date</th>
+              <th class="py-3.5 px-4">Status</th>
+              <th class="py-3.5 px-4">Payment</th>
+              <th class="py-3.5 px-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="orders-tbody" class="divide-y divide-gold/10">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+      <!-- Empty state -->
+      <div id="empty-state" class="py-16 text-center text-muted hidden">
+        <div class="text-4xl mb-3">🧵</div>
+        <p class="text-base font-medium">No orders found</p>
+        <p class="text-xs mt-1 text-muted/70">Click "+ New Order" above to create your first tailor order entry.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- ============================================== -->
+  <!-- MODAL: CREATE / EDIT ORDER & MEASUREMENTS      -->
+  <!-- ============================================== -->
+  <div id="order-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-night-light border border-gold/30 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl my-8 overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-gold/15 flex items-center justify-between bg-night">
+        <h3 class="font-display font-bold text-xl text-gold" id="modal-title">Create Tailoring Order</h3>
+        <button onclick="closeOrderModal()" class="text-muted hover:text-warm text-2xl font-light">&times;</button>
+      </div>
+
+      <!-- Modal Form Body -->
+      <form id="order-form" onsubmit="saveOrder(event)" class="p-6 space-y-6 overflow-y-auto flex-1">
+        <input type="hidden" id="order-id">
+
+        <!-- Section 1: Customer Details -->
+        <div>
+          <h4 class="text-xs font-semibold uppercase tracking-wider text-gold-light mb-3 pb-1 border-b border-gold/10">1. Customer Information</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs text-muted mb-1">Customer Name *</label>
+              <input type="text" id="cust-name" required placeholder="e.g. Rahul Sharma" class="w-full bg-night border border-gold/20 text-warm text-sm rounded-lg px-3 py-2 focus:border-gold focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs text-muted mb-1">Phone Number (WhatsApp) *</label>
+              <input type="tel" id="cust-phone" required placeholder="e.g. 9885030824" class="w-full bg-night border border-gold/20 text-warm text-sm rounded-lg px-3 py-2 focus:border-gold focus:outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Order & Garment Details -->
+        <div>
+          <h4 class="text-xs font-semibold uppercase tracking-wider text-gold-light mb-3 pb-1 border-b border-gold/10">2. Garments & Delivery</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs text-muted mb-1">Garment Type *</label>
+              <select id="garment-type" onchange="toggleMeasurementFields()" class="w-full bg-night border border-gold/20 text-warm text-sm rounded-lg px-3 py-2 focus:border-gold focus:outline-none">
+                <option value="Suit">3-Piece / 2-Piece Suit 🤵</option>
+                <option value="Shirt & Trouser">Shirt & Trouser 👔</option>
+                <option value="Sherwani">Sherwani / Wedding 🪔</option>
+                <option value="Kurta Pajama">Kurta Pajama 🕌</option>
+                <option value="Uniform">Uniform (School/Corporate) 🏢</option>
+                <option value="Alteration">Alterations ✂️</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-muted mb-1">Due Date *</label>
+              <input type="date" id="due-date" required class="w-full bg-night border border-gold/20 text-warm text-sm rounded-lg px-3 py-2 focus:border-gold focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs text-muted mb-1">Current Status</label>
+              <select id="order-status" class="w-full bg-night border border-gold/20 text-warm text-sm rounded-lg px-3 py-2 focus:border-gold focus:outline-none">
+                <option value="Received">Received 📥</option>
+                <option value="Cutting">Cutting ✂️</option>
+                <option value="Stitching">Stitching 🧵</option>
+                <option value="Ready">Ready for Trial 👔</option>
+                <option value="Delivered">Delivered ✅</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Measurements (Inches) -->
+        <div>
+          <div class="flex items-center justify-between mb-3 pb-1 border-b border-gold/10">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-gold-light">3. Detailed Measurements (Inches)</h4>
+            <span class="text-[11px] text-muted">Leave blank if not applicable</span>
+          </div>
+
+          <!-- Upper Body (Suit / Shirt / Sherwani / Kurta) -->
+          <div id="m-upper" class="space-y-3 mb-4">
+            <span class="text-xs font-medium text-gold/80">Upper Body / Top</span>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div>
+                <label class="block text-[11px] text-muted">Chest / Bust</label>
+                <input type="text" id="m-chest" placeholder="e.g. 40&quot;" class="w-full bg-night border border-gold/15 text-warm text-xs rounded px-2.5 py-1.5 focus:border-gold focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] text-muted">Shoulder Width</label>
+                <input type="text" id="m-shoulder" placeholder="e.g. 18.5&quot;" class="w-full bg-night border border-gold/15 text-warm text-xs rounded px-2.5 py-1.5 focus:border-gold focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] text-muted">Sleeve Length</label>
+                <input type="text" id="m-sleeve" placeholder="e.g. 24.5&quot;" class="w-full bg-night border border-gold/15 text-warm text-xs rounded px-2.5 py-1.5 focus:border-gold focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] text-muted">Collar / Neck</label>
+                <input type="text" id="m-collar" placeholder="e.g. 16&quot;" class="w-full bg-night border border-gold/15 text-warm text-xs rounded px-2.5 py-1.5 focus:border-gold focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] text-muted">Garment Length</label>
+                <input type="text" id="m-length" placeholder="e.g. 30&quot;" class="w-full bg-night border border-gold/15 text-warm text-xs rounded px-2.5 py-1.5 focus:border-gold focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] text-muted">Waist (Shirt/Jacket)</label>
+                <input type="text" id="m-top-waist" placeholder="e.g. 36&quot;" class="w-full bg-night border border-gold/15 text-warm text-xs rounded px-2.5 py-1.5 focus:border-gold focus:outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Lower Body (Trousers / Pajama) -->
+          <div id="m-lower" class="space-y-3">
+            <span class="text-xs font-medium text-gold/80">Lower Body / Trousers</span>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div>
+                <label class="block text-[11px] text-muted">Trouser Waist</label>
+                <input type="text" id="m-waist" placeholder="e.g. 34&quot;" class="w-full bg-night border border-gold/15 text-warm text-xs rounded px-2.5 py-1.5 focus:border-gold focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] text-muted">Hips</label>
+                <input type="text" id="m-hips" placeholder="e.g. 41&quot;" class="w-full bg-night border border-gold/15 text-warm text-xs rounded px-2.5 py-1.5 focus:border-gold focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] text-muted">Outseam / Full Length</label>
+                <input type="text" id="m-outseam" placeholder="e.g. 41.5&quot;" class="w-full bg-night border border-gold/15 text-warm text-xs rounded px-2.5 py-1.5 focus:border-gold focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] text-muted">Inseam</label>
+                <input type="text" id="m-inseam" placeholder="e.g. 31&quot;" class="w-full bg-night border border-gold/15 text-warm text-xs rounded px-2.5 py-1.5 focus:border-gold focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] text-muted">Thigh</label>
+                <input type="text" id="m-thigh" placeholder="e.g. 26&quot;" class="w-full bg-night border border-gold/15 text-warm text-xs rounded px-2.5 py-1.5 focus:border-gold focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] text-muted">Bottom Opening</label>
+                <input type="text" id="m-bottom" placeholder="e.g. 15.5&quot;" class="w-full bg-night border border-gold/15 text-warm text-xs rounded px-2.5 py-1.5 focus:border-gold focus:outline-none">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Billing & Notes -->
+        <div>
+          <h4 class="text-xs font-semibold uppercase tracking-wider text-gold-light mb-3 pb-1 border-b border-gold/10">4. Payment & Special Notes</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label class="block text-xs text-muted mb-1">Total Charge (₹)</label>
+              <input type="number" id="pay-total" min="0" step="50" oninput="calcBalance()" placeholder="0" class="w-full bg-night border border-gold/20 text-warm text-sm rounded-lg px-3 py-2 focus:border-gold focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs text-muted mb-1">Advance Paid (₹)</label>
+              <input type="number" id="pay-advance" min="0" step="50" oninput="calcBalance()" placeholder="0" class="w-full bg-night border border-gold/20 text-warm text-sm rounded-lg px-3 py-2 focus:border-gold focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs text-muted mb-1">Balance Due (₹)</label>
+              <input type="number" id="pay-balance" readonly placeholder="0" class="w-full bg-night-card border border-gold/20 text-gold font-bold text-sm rounded-lg px-3 py-2">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs text-muted mb-1">Special Design Notes / Fabric Details</label>
+            <textarea id="order-notes" rows="2" placeholder="e.g. Italian wool navy fabric, double vent jacket, satin lining..." class="w-full bg-night border border-gold/20 text-warm text-xs rounded-lg p-2.5 focus:border-gold focus:outline-none"></textarea>
+          </div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="pt-4 border-t border-gold/15 flex items-center justify-end gap-3">
+          <button type="button" onclick="closeOrderModal()" class="px-5 py-2 rounded-lg text-xs font-medium text-muted hover:text-warm bg-night border border-gold/10 transition-colors">Cancel</button>
+          <button type="submit" class="px-6 py-2 rounded-lg text-xs font-bold text-night bg-gold hover:bg-gold-light transition-colors shadow-md shadow-gold/20">Save Order Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: VIEW MEASUREMENTS & WHATSAPP SENDER    -->
+  <!-- ============================================== -->
+  <div id="view-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-night-light border border-gold/30 rounded-2xl w-full max-w-xl shadow-2xl p-6 relative">
+      <button onclick="closeViewModal()" class="absolute top-4 right-4 text-muted hover:text-warm text-2xl font-light">&times;</button>
+      <div id="view-modal-content"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-night border-t border-gold/10 py-4 text-center text-xs text-muted/60">
+    Moon Star Tailors — Begumpet, Hyderabad | Internal Tailoring System
+  </footer>
+
+  <!-- App Script Logic -->
+  <script>
+    const STORAGE_KEY = 'moon_star_tailors_orders';
+    let orders = [];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      loadOrders();
+      // Set default due date to 7 days from now
+      const defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + 7);
+      document.getElementById('due-date').value = defaultDate.toISOString().split('T')[0];
+    });
+
+    function loadOrders() {
+      const data = localStorage.getItem(STORAGE_KEY);
+      if (data) {
+        try {
+          orders = JSON.parse(data);
+        } catch (e) {
+          orders = [];
+        }
+      } else {
+        // Seed initial demo data for immediate testing
+        orders = [
+          {
+            id: 'MST-1001',
+            custName: 'Rahul Sharma',
+            custPhone: '9885030824',
+            garmentType: 'Suit',
+            dueDate: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0],
+            status: 'Stitching',
+            measurements: { chest: '40"', shoulder: '18.5"', sleeve: '24.5"', length: '29.5"', waist: '34"', outseam: '41"' },
+            total: 6500,
+            advance: 3000,
+            notes: 'Navy blue 2-piece business suit, notch lapel',
+            created: new Date().toISOString()
+          },
+          {
+            id: 'MST-1002',
+            custName: 'Mohammed Irfan',
+            custPhone: '9885030824',
+            garmentType: 'Sherwani',
+            dueDate: new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0],
+            status: 'Cutting',
+            measurements: { chest: '42"', shoulder: '19"', sleeve: '25"', length: '44"', waist: '36"' },
+            total: 12000,
+            advance: 5000,
+            notes: 'Cream wedding sherwani with gold thread work',
+            created: new Date().toISOString()
+          }
+        ];
+        saveToStorage();
+      }
+      renderOrders();
+    }
+
+    function saveToStorage() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+      renderOrders();
+    }
+
+    function calcBalance() {
+      const total = parseFloat(document.getElementById('pay-total').value) || 0;
+      const advance = parseFloat(document.getElementById('pay-advance').value) || 0;
+      document.getElementById('pay-balance').value = Math.max(0, total - advance);
+    }
+
+    function renderOrders() {
+      const tbody = document.getElementById('orders-tbody');
+      const emptyState = document.getElementById('empty-state');
+      const search = document.getElementById('search-input').value.toLowerCase().trim();
+      const statusFilter = document.getElementById('status-filter').value;
+      const sortFilter = document.getElementById('sort-filter').value;
+
+      // Filter
+      let filtered = orders.filter(o => {
+        const matchesSearch = o.custName.toLowerCase().includes(search) || 
+                              o.custPhone.includes(search) || 
+                              o.id.toLowerCase().includes(search) ||
+                              o.garmentType.toLowerCase().includes(search);
+        const matchesStatus = statusFilter === 'ALL' || o.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      });
+
+      // Sort
+      filtered.sort((a, b) => {
+        if (sortFilter === 'dueDate') return new Date(a.dueDate) - new Date(b.dueDate);
+        if (sortFilter === 'newest') return new Date(b.created) - new Date(a.created);
+        if (sortFilter === 'name') return a.custName.localeCompare(b.custName);
+        return 0;
+      });
+
+      // Update Quick Stats
+      let totalActive = 0, inStitching = 0, readyCount = 0, totalBalance = 0;
+      orders.forEach(o => {
+        if (o.status !== 'Delivered') totalActive++;
+        if (o.status === 'Stitching') inStitching++;
+        if (o.status === 'Ready') readyCount++;
+        totalBalance += (o.total - o.advance);
+      });
+      document.getElementById('stat-total').textContent = totalActive;
+      document.getElementById('stat-stitching').textContent = inStitching;
+      document.getElementById('stat-ready').textContent = readyCount;
+      document.getElementById('stat-balance').textContent = '₹' + totalBalance.toLocaleString('en-IN');
+
+      // Render table rows
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      tbody.innerHTML = filtered.map(o => {
+        const balance = o.total - o.advance;
+        const isOverdue = new Date(o.dueDate) < new Date().setHours(0,0,0,0) && o.status !== 'Delivered';
+        
+        let statusBadge = '';
+        switch(o.status) {
+          case 'Received': statusBadge = '<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded-full text-xs">Received 📥</span>'; break;
+          case 'Cutting': statusBadge = '<span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-full text-xs">Cutting ✂️</span>'; break;
+          case 'Stitching': statusBadge = '<span class="bg-gold/10 text-gold border border-gold/30 px-2.5 py-1 rounded-full text-xs font-medium">Stitching 🧵</span>'; break;
+          case 'Ready': statusBadge = '<span class="bg-green-500/10 text-green-400 border border-green-500/30 px-2.5 py-1 rounded-full text-xs font-semibold animate-pulse">Ready 👔</span>'; break;
+          case 'Delivered': statusBadge = '<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 px-2.5 py-1 rounded-full text-xs">Delivered ✅</span>'; break;
+        }
+
+        return `
+          <tr class="hover:bg-night-light/50 transition-colors">
+            <td class="py-3.5 px-4 font-mono font-bold text-gold-light">${o.id}</td>
+            <td class="py-3.5 px-4">
+              <div class="font-semibold text-warm">${escapeHtml(o.custName)}</div>
+              <div class="text-xs text-muted font-mono">${escapeHtml(o.custPhone)}</div>
+            </td>
+            <td class="py-3.5 px-4">
+              <span class="text-xs text-gold-light font-medium">${escapeHtml(o.garmentType)}</span>
+              ${o.notes ? `<div class="text-[11px] text-muted truncate max-w-[180px]">${escapeHtml(o.notes)}</div>` : ''}
+            </td>
+            <td class="py-3.5 px-4">
+              <span class="text-xs font-mono ${isOverdue ? 'text-red-400 font-bold' : 'text-muted'}">${o.dueDate}</span>
+              ${isOverdue ? '<div class="text-[10px] text-red-400">OVERDUE</div>' : ''}
+            </td>
+            <td class="py-3.5 px-4">${statusBadge}</td>
+            <td class="py-3.5 px-4">
+              <div class="text-xs font-mono">₹${o.total.toLocaleString('en-IN')}</div>
+              <div class="text-[11px] ${balance > 0 ? 'text-gold' : 'text-green-400'} font-mono">
+                ${balance > 0 ? `Bal: ₹${balance.toLocaleString('en-IN')}` : 'Paid ✓'}
+              </div>
+            </td>
+            <td class="py-3.5 px-4 text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <button onclick="sendWhatsApp('${o.id}')" title="Send WhatsApp Update" class="p-1.5 text-xs bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/20 rounded-md transition-colors">💬</button>
+                <button onclick="viewOrderDetails('${o.id}')" title="View Measurements" class="p-1.5 text-xs bg-night border border-gold/20 text-gold-light hover:bg-gold/10 rounded-md transition-colors">📏</button>
+                <button onclick="editOrder('${o.id}')" title="Edit Order" class="p-1.5 text-xs bg-night border border-gold/20 text-muted hover:text-warm rounded-md transition-colors">✏️</button>
+                <button onclick="deleteOrder('${o.id}')" title="Delete Order" class="p-1.5 text-xs bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 rounded-md transition-colors">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Modal Operations
+    function openNewOrderModal() {
+      document.getElementById('modal-title').textContent = 'Create New Tailoring Order';
+      document.getElementById('order-id').value = '';
+      document.getElementById('order-form').reset();
+      
+      const newId = 'MST-' + (1000 + orders.length + 1);
+      const defaultDate = new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0];
+      document.getElementById('due-date').value = defaultDate;
+      document.getElementById('order-status').value = 'Received';
+      
+      document.getElementById('order-modal').classList.remove('hidden');
+      document.getElementById('order-modal').classList.add('flex');
+    }
+
+    function closeOrderModal() {
+      document.getElementById('order-modal').classList.add('hidden');
+      document.getElementById('order-modal').classList.remove('flex');
+    }
+
+    function saveOrder(e) {
+      e.preventDefault();
+      const existingId = document.getElementById('order-id').value;
+      const isNew = !existingId;
+
+      const orderData = {
+        id: isNew ? 'MST-' + (Math.floor(Math.random() * 9000) + 1000) : existingId,
+        custName: document.getElementById('cust-name').value.trim(),
+        custPhone: document.getElementById('cust-phone').value.trim(),
+        garmentType: document.getElementById('garment-type').value,
+        dueDate: document.getElementById('due-date').value,
+        status: document.getElementById('order-status').value,
+        measurements: {
+          chest: document.getElementById('m-chest').value.trim(),
+          shoulder: document.getElementById('m-shoulder').value.trim(),
+          sleeve: document.getElementById('m-sleeve').value.trim(),
+          collar: document.getElementById('m-collar').value.trim(),
+          length: document.getElementById('m-length').value.trim(),
+          topWaist: document.getElementById('m-top-waist').value.trim(),
+          waist: document.getElementById('m-waist').value.trim(),
+          hips: document.getElementById('m-hips').value.trim(),
+          outseam: document.getElementById('m-outseam').value.trim(),
+          inseam: document.getElementById('m-inseam').value.trim(),
+          thigh: document.getElementById('m-thigh').value.trim(),
+          bottom: document.getElementById('m-bottom').value.trim(),
+        },
+        total: parseFloat(document.getElementById('pay-total').value) || 0,
+        advance: parseFloat(document.getElementById('pay-advance').value) || 0,
+        notes: document.getElementById('order-notes').value.trim(),
+        created: isNew ? new Date().toISOString() : (orders.find(o => o.id === existingId)?.created || new Date().toISOString())
+      };
+
+      if (isNew) {
+        orders.unshift(orderData);
+      } else {
+        const idx = orders.findIndex(o => o.id === existingId);
+        if (idx !== -1) orders[idx] = orderData;
+      }
+
+      saveToStorage();
+      closeOrderModal();
+    }
+
+    function editOrder(id) {
+      const o = orders.find(item => item.id === id);
+      if (!o) return;
+
+      document.getElementById('modal-title').textContent = 'Edit Order ' + o.id;
+      document.getElementById('order-id').value = o.id;
+      document.getElementById('cust-name').value = o.custName;
+      document.getElementById('cust-phone').value = o.custPhone;
+      document.getElementById('garment-type').value = o.garmentType;
+      document.getElementById('due-date').value = o.dueDate;
+      document.getElementById('order-status').value = o.status;
+
+      const m = o.measurements || {};
+      document.getElementById('m-chest').value = m.chest || '';
+      document.getElementById('m-shoulder').value = m.shoulder || '';
+      document.getElementById('m-sleeve').value = m.sleeve || '';
+      document.getElementById('m-collar').value = m.collar || '';
+      document.getElementById('m-length').value = m.length || '';
+      document.getElementById('m-top-waist').value = m.topWaist || '';
+      document.getElementById('m-waist').value = m.waist || '';
+      document.getElementById('m-hips').value = m.hips || '';
+      document.getElementById('m-outseam').value = m.outseam || '';
+      document.getElementById('m-inseam').value = m.inseam || '';
+      document.getElementById('m-thigh').value = m.thigh || '';
+      document.getElementById('m-bottom').value = m.bottom || '';
+
+      document.getElementById('pay-total').value = o.total || '';
+      document.getElementById('pay-advance').value = o.advance || '';
+      calcBalance();
+
+      document.getElementById('order-notes').value = o.notes || '';
+
+      document.getElementById('order-modal').classList.remove('hidden');
+      document.getElementById('order-modal').classList.add('flex');
+    }
+
+    function deleteOrder(id) {
+      if (confirm(`Are you sure you want to delete order ${id}?`)) {
+        orders = orders.filter(o => o.id !== id);
+        saveToStorage();
+      }
+    }
+
+    function viewOrderDetails(id) {
+      const o = orders.find(item => item.id === id);
+      if (!o) return;
+
+      const m = o.measurements || {};
+      const balance = o.total - o.advance;
+
+      const html = `
+        <div class="flex items-center justify-between border-b border-gold/15 pb-3 mb-4">
+          <div>
+            <span class="font-mono text-gold font-bold text-lg">${o.id}</span>
+            <h3 class="font-display font-semibold text-xl text-warm">${escapeHtml(o.custName)}</h3>
+            <p class="text-xs text-muted">Phone: ${escapeHtml(o.custPhone)} | Due: ${o.dueDate}</p>
+          </div>
+          <span class="bg-gold/10 text-gold border border-gold/20 px-3 py-1 rounded-full text-xs font-semibold">${o.status}</span>
+        </div>
+
+        <div class="mb-4">
+          <h4 class="text-xs font-semibold uppercase tracking-wider text-gold-light mb-2">Garment: ${escapeHtml(o.garmentType)}</h4>
+          ${o.notes ? `<p class="text-xs text-muted bg-night p-3 rounded-lg border border-gold/10 mb-3">${escapeHtml(o.notes)}</p>` : ''}
+        </div>
+
+        <div class="mb-6">
+          <h4 class="text-xs font-semibold uppercase tracking-wider text-gold-light mb-2">Recorded Measurements</h4>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs bg-night p-4 rounded-xl border border-gold/10">
+            ${m.chest ? `<div><span class="text-muted">Chest:</span> <strong class="text-warm">${m.chest}</strong></div>` : ''}
+            ${m.shoulder ? `<div><span class="text-muted">Shoulder:</span> <strong class="text-warm">${m.shoulder}</strong></div>` : ''}
+            ${m.sleeve ? `<div><span class="text-muted">Sleeve:</span> <strong class="text-warm">${m.sleeve}</strong></div>` : ''}
+            ${m.collar ? `<div><span class="text-muted">Collar:</span> <strong class="text-warm">${m.collar}</strong></div>` : ''}
+            ${m.length ? `<div><span class="text-muted">Length:</span> <strong class="text-warm">${m.length}</strong></div>` : ''}
+            ${m.topWaist ? `<div><span class="text-muted">Shirt Waist:</span> <strong class="text-warm">${m.topWaist}</strong></div>` : ''}
+            ${m.waist ? `<div><span class="text-muted">Trouser Waist:</span> <strong class="text-warm">${m.waist}</strong></div>` : ''}
+            ${m.hips ? `<div><span class="text-muted">Hips:</span> <strong class="text-warm">${m.hips}</strong></div>` : ''}
+            ${m.outseam ? `<div><span class="text-muted">Outseam:</span> <strong class="text-warm">${m.outseam}</strong></div>` : ''}
+            ${m.inseam ? `<div><span class="text-muted">Inseam:</span> <strong class="text-warm">${m.inseam}</strong></div>` : ''}
+            ${m.thigh ? `<div><span class="text-muted">Thigh:</span> <strong class="text-warm">${m.thigh}</strong></div>` : ''}
+            ${m.bottom ? `<div><span class="text-muted">Bottom:</span> <strong class="text-warm">${m.bottom}</strong></div>` : ''}
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between bg-night p-3 rounded-lg border border-gold/10 text-xs mb-6">
+          <div><span class="text-muted">Total:</span> <strong>₹${o.total.toLocaleString('en-IN')}</strong></div>
+          <div><span class="text-muted">Advance:</span> <strong>₹${o.advance.toLocaleString('en-IN')}</strong></div>
+          <div><span class="text-muted">Balance Due:</span> <strong class="text-gold font-bold">₹${balance.toLocaleString('en-IN')}</strong></div>
+        </div>
+
+        <button onclick="sendWhatsApp('${o.id}')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2.5 rounded-lg text-sm transition-colors flex items-center justify-center gap-2">
+          <span>💬 Send 1-Click WhatsApp Update</span>
+        </button>
+      `;
+
+      document.getElementById('view-modal-content').innerHTML = html;
+      document.getElementById('view-modal').classList.remove('hidden');
+      document.getElementById('view-modal').classList.add('flex');
+    }
+
+    function closeViewModal() {
+      document.getElementById('view-modal').classList.add('hidden');
+      document.getElementById('view-modal').classList.remove('flex');
+    }
+
+    function sendWhatsApp(id) {
+      const o = orders.find(item => item.id === id);
+      if (!o) return;
+
+      const cleanPhone = o.custPhone.replace(/\D/g, '');
+      const phoneWithCountry = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
+      const balance = o.total - o.advance;
+
+      let msg = '';
+      if (o.status === 'Received') {
+        msg = `Hello ${o.custName},\nThank you for choosing Moon Star Tailors! 🌙⭐\n\nYour order #${o.id} for ${o.garmentType} has been received and scheduled for stitching.\n\n📅 Expected Ready Date: ${o.dueDate}\n💰 Advance Paid: ₹${o.advance}\n💰 Balance Due: ₹${balance}\n\nLocation: Rasoolpura, Begumpet, Hyderabad\nPhone: +91 98850 30824`;
+      } else if (o.status === 'Ready') {
+        msg = `Hello ${o.custName}! 🎉\nGreat news from Moon Star Tailors 🌙⭐!\n\nYour order #${o.id} (${o.garmentType}) is READY for trial and pickup!\n\n💰 Pending Balance: ₹${balance}\n📍 Shop Address: Moon Star Tailors, Rasoolpura, Gun Bazar, Begumpet, Hyderabad.\n\nWe look forward to serving you!`;
+      } else {
+        msg = `Hello ${o.custName},\nUpdate regarding your order #${o.id} (${o.garmentType}) at Moon Star Tailors 🌙⭐:\n\nCurrent Status: ${o.status}\nExpected Ready Date: ${o.dueDate}\n\nCall us anytime at +91 98850 30824 for any queries.`;
+      }
+
+      const url = `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(msg)}`;
+      window.open(url, '_blank');
+    }
+
+    // Export / Import Data
+    function exportData() {
+      const jsonStr = JSON.stringify(orders, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `moon_star_tailors_orders_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importData(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const imported = JSON.parse(evt.target.result);
+          if (Array.isArray(imported)) {
+            if (confirm(`Importing will merge ${imported.length} order entries into your current data. Proceed?`)) {
+              orders = [...imported, ...orders];
+              // De-duplicate by ID
+              const map = new Map();
+              orders.forEach(item => map.set(item.id, item));
+              orders = Array.from(map.values());
+              saveToStorage();
+              alert('Orders imported successfully!');
+            }
+          } else {
+            alert('Invalid backup file format.');
+          }
+        } catch (err) {
+          alert('Error parsing JSON backup file.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>
