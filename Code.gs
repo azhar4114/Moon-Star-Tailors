@@ -1,23 +1,31 @@
 /**
- * Moon Star Tailors — Google Apps Script API Backend
+ * Moon Star Tailors — Google Apps Script API Backend (Secured)
  * 
- * Instructions:
- * 1. Create a new Google Sheet named "Moon Star Tailors Orders"
- * 2. In Google Sheets menu: Go to Extensions > Apps Script
- * 3. Delete existing code in Code.gs and paste this ENTIRE file
- * 4. Click "Save" (disk icon)
- * 5. Click "Deploy" > "New deployment"
- * 6. Select type: "Web app"
- * 7. Description: "Moon Star Tailors API"
- * 8. Execute as: "Me"
- * 9. Who has access: "Anyone"  <-- IMPORTANT!
- * 10. Click "Deploy" -> Authorize access
- * 11. Copy the "Web app URL" (starts with https://script.google.com/macros/s/...)
- * 12. Paste the Web app URL in your Tracker app's "Cloud Sync Setup" modal!
+ * SECURITY NOTE:
+ * Set your SECRET_KEY below. Any request without this key will be REJECTED with 403 Unauthorized.
  */
+
+// Set your secret key/PIN here. Set to "" if you want to disable authentication.
+var SECRET_KEY = "MST8898850"; 
+
+function isAuthorized(e, contents) {
+  if (!SECRET_KEY || SECRET_KEY === "") return true;
+  
+  // Check URL parameter e.g. ?key=...
+  if (e && e.parameter && e.parameter.key === SECRET_KEY) return true;
+  
+  // Check POST JSON payload body e.g. { key: "..." }
+  if (contents && contents.key === SECRET_KEY) return true;
+  
+  return false;
+}
 
 function doGet(e) {
   try {
+    if (!isAuthorized(e, null)) {
+      return jsonResponse({ status: "error", message: "403 Unauthorized: Invalid or missing Security Key." });
+    }
+
     var sheet = getOrCreateSheet();
     var data = sheet.getDataRange().getValues();
     
@@ -30,7 +38,7 @@ function doGet(e) {
     
     for (var i = 1; i < data.length; i++) {
       var row = data[i];
-      if (!row[0]) continue; // Skip empty rows
+      if (!row[0]) continue;
       
       var order = {
         id: row[0].toString(),
@@ -57,7 +65,12 @@ function doGet(e) {
 function doPost(e) {
   try {
     var contents = JSON.parse(e.postData.contents);
-    var action = contents.action; // "save", "delete", "sync_all"
+    
+    if (!isAuthorized(e, contents)) {
+      return jsonResponse({ status: "error", message: "403 Unauthorized: Invalid or missing Security Key." });
+    }
+
+    var action = contents.action;
     var sheet = getOrCreateSheet();
     
     if (action === "save") {
@@ -72,7 +85,6 @@ function doPost(e) {
     }
     else if (action === "sync_all") {
       var allOrders = contents.orders || [];
-      // Clear sheet body and re-populate
       var lastRow = sheet.getLastRow();
       if (lastRow > 1) {
         sheet.getRange(2, 1, lastRow - 1, 11).clearContent();
@@ -95,7 +107,6 @@ function getOrCreateSheet() {
   var sheet = ss.getSheetByName("Orders");
   if (!sheet) {
     sheet = ss.insertSheet("Orders");
-    // Add header row
     sheet.appendRow([
       "Order ID",
       "Customer Name",
@@ -109,7 +120,6 @@ function getOrCreateSheet() {
       "Measurements (JSON)",
       "Created At"
     ]);
-    // Format header
     var headerRange = sheet.getRange(1, 1, 1, 11);
     headerRange.setBackground("#1a1a2e").setFontColor("#c9a84c").setFontWeight("bold");
     sheet.setFrozenRows(1);
@@ -123,7 +133,7 @@ function saveOrUpdateOrder(sheet, order) {
   
   for (var i = 1; i < data.length; i++) {
     if (data[i][0] && data[i][0].toString() === order.id.toString()) {
-      targetRow = i + 1; // 1-indexed
+      targetRow = i + 1;
       break;
     }
   }

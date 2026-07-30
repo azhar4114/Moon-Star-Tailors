@@ -349,6 +349,11 @@
           <label class="block text-xs text-gold-light mb-1">Apps Script Web App URL</label>
           <input type="url" id="api-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-night border border-gold/20 text-warm text-xs rounded-lg px-3 py-2 focus:border-gold focus:outline-none font-mono">
         </div>
+        <div>
+          <label class="block text-xs text-gold-light mb-1">Security Passkey / PIN (Matches Code.gs)</label>
+          <input type="text" id="api-key-input" placeholder="e.g. MST8898850" class="w-full bg-night border border-gold/20 text-warm text-xs rounded-lg px-3 py-2 focus:border-gold focus:outline-none font-mono">
+          <p class="text-[10px] text-muted mt-1">Protects your API endpoint so unauthorized users cannot read or modify your sheet.</p>
+        </div>
 
         <div class="bg-night p-3 rounded-lg border border-gold/10 text-[11px] text-muted space-y-1">
           <p class="font-semibold text-gold-light">How to get your Web App URL:</p>
@@ -383,8 +388,10 @@
   <script>
     const STORAGE_KEY = 'moon_star_tailors_orders';
     const API_URL_KEY = 'moon_star_tailors_api_url';
+    const SECRET_KEY_STORAGE = 'moon_star_tailors_secret_key';
     let orders = [];
     let apiUrl = localStorage.getItem(API_URL_KEY) || '';
+    let secretKey = localStorage.getItem(SECRET_KEY_STORAGE) || 'MST8898850';
 
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
@@ -403,7 +410,7 @@
       if (apiUrl) {
         btn.classList.remove('text-gold');
         btn.classList.add('text-green-400', 'border-green-500/30');
-        icon.textContent = '☁️';
+        icon.textContent = '🔒';
         label.textContent = 'Cloud Active';
       } else {
         btn.classList.remove('text-green-400', 'border-green-500/30');
@@ -415,6 +422,7 @@
 
     function openCloudModal() {
       document.getElementById('api-url-input').value = apiUrl;
+      document.getElementById('api-key-input').value = secretKey;
       const pushBtn = document.getElementById('push-all-btn');
       if (apiUrl) {
         pushBtn.classList.remove('hidden');
@@ -431,9 +439,10 @@
     }
 
     function saveCloudSetup() {
-      const input = document.getElementById('api-url-input').value.trim();
-      apiUrl = input;
+      apiUrl = document.getElementById('api-url-input').value.trim();
+      secretKey = document.getElementById('api-key-input').value.trim();
       localStorage.setItem(API_URL_KEY, apiUrl);
+      localStorage.setItem(SECRET_KEY_STORAGE, secretKey);
       updateCloudBtnStatus();
       closeCloudModal();
       if (apiUrl) {
@@ -443,8 +452,11 @@
 
     function disconnectCloud() {
       apiUrl = '';
+      secretKey = '';
       localStorage.removeItem(API_URL_KEY);
+      localStorage.removeItem(SECRET_KEY_STORAGE);
       document.getElementById('api-url-input').value = '';
+      document.getElementById('api-key-input').value = '';
       updateCloudBtnStatus();
       closeCloudModal();
       alert('Disconnected from Google Sheets. App will use device LocalStorage.');
@@ -453,7 +465,8 @@
     function fetchFromCloud() {
       if (!apiUrl) return;
       document.getElementById('cloud-label').textContent = 'Syncing...';
-      fetch(apiUrl)
+      const fetchUrl = secretKey ? `${apiUrl}${apiUrl.includes('?') ? '&' : '?'}key=${encodeURIComponent(secretKey)}` : apiUrl;
+      fetch(fetchUrl)
         .then(res => res.json())
         .then(data => {
           if (data && data.status === 'success' && Array.isArray(data.orders)) {
@@ -462,6 +475,9 @@
               saveToStorage(false); // don't push back to cloud while fetching
             }
             document.getElementById('cloud-label').textContent = 'Cloud Active';
+          } else if (data && data.message && data.message.includes('403')) {
+            alert('Cloud Sync Error: Invalid Security Passkey! Please check your passkey in setup.');
+            document.getElementById('cloud-label').textContent = 'Key Error';
           } else {
             console.warn('Cloud fetch warning:', data);
             document.getElementById('cloud-label').textContent = 'Cloud Active';
@@ -481,11 +497,15 @@
       fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'sync_all', orders: orders })
+        body: JSON.stringify({ action: 'sync_all', key: secretKey, orders: orders })
       })
       .then(res => res.json())
       .then(data => {
-        alert('All orders pushed to Google Sheets successfully!');
+        if (data.status === 'success') {
+          alert('All orders pushed to Google Sheets successfully!');
+        } else {
+          alert('Error: ' + data.message);
+        }
         document.getElementById('cloud-label').textContent = 'Cloud Active';
         closeCloudModal();
       })
@@ -546,7 +566,7 @@
         fetch(apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'sync_all', orders: orders })
+          body: JSON.stringify({ action: 'sync_all', key: secretKey, orders: orders })
         })
         .then(res => res.json())
         .then(() => {
@@ -766,7 +786,7 @@
           fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'delete', id: id })
+            body: JSON.stringify({ action: 'delete', key: secretKey, id: id })
           }).catch(console.error);
         }
       }
