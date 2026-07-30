@@ -65,6 +65,9 @@
       </div>
 
       <div class="flex items-center gap-2">
+        <button onclick="openCloudModal()" title="Google Sheets Sync" class="text-xs bg-night-card hover:bg-gold/10 text-gold border border-gold/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors" id="cloud-btn">
+          <span id="cloud-icon">☁️</span> <span id="cloud-label">Cloud Sync</span>
+        </button>
         <button onclick="exportData()" title="Backup Data" class="text-xs bg-night-card hover:bg-gold/10 text-gold border border-gold/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors">
           <span>💾 Backup</span>
         </button>
@@ -332,6 +335,45 @@
     </div>
   </div>
 
+  <!-- MODAL: GOOGLE SHEETS API CONFIG -->
+  <div id="cloud-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-night-light border border-gold/30 rounded-2xl w-full max-w-lg shadow-2xl p-6 relative">
+      <button onclick="closeCloudModal()" class="absolute top-4 right-4 text-muted hover:text-warm text-2xl font-light">&times;</button>
+      <h3 class="font-display font-bold text-xl text-gold mb-2">☁️ Google Sheets Sync Setup</h3>
+      <p class="text-xs text-muted leading-relaxed mb-4">
+        Connect your tracker to your Google Sheet so all devices (phones, tablets, PCs) stay synced in real-time.
+      </p>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs text-gold-light mb-1">Apps Script Web App URL</label>
+          <input type="url" id="api-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-night border border-gold/20 text-warm text-xs rounded-lg px-3 py-2 focus:border-gold focus:outline-none font-mono">
+        </div>
+
+        <div class="bg-night p-3 rounded-lg border border-gold/10 text-[11px] text-muted space-y-1">
+          <p class="font-semibold text-gold-light">How to get your Web App URL:</p>
+          <ol class="list-decimal pl-4 space-y-0.5">
+            <li>Create a Google Sheet named <strong>"Moon Star Tailors Orders"</strong></li>
+            <li>Go to <strong>Extensions > Apps Script</strong></li>
+            <li>Paste the code from <code>Code.gs</code> in your GitHub repo</li>
+            <li>Click <strong>Deploy > New deployment > Web app</strong></li>
+            <li>Set Access: <strong>"Anyone"</strong> and click Deploy!</li>
+          </ol>
+        </div>
+
+        <div class="flex items-center justify-between pt-2">
+          <button onclick="syncAllToCloud()" id="push-all-btn" class="text-xs bg-gold/10 hover:bg-gold/20 text-gold border border-gold/20 px-3 py-2 rounded-lg transition-colors hidden">
+            📤 Push Local Orders to Sheet
+          </button>
+          <div class="flex gap-2 ml-auto">
+            <button onclick="disconnectCloud()" class="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-3 py-2 rounded-lg transition-colors">Disconnect</button>
+            <button onclick="saveCloudSetup()" class="text-xs bg-gold text-night font-bold px-4 py-2 rounded-lg hover:bg-gold-light transition-colors">Save & Sync</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="bg-night border-t border-gold/10 py-4 text-center text-xs text-muted/60">
     Moon Star Tailors — Begumpet, Hyderabad | Internal Tailoring System
@@ -340,16 +382,118 @@
   <!-- App Script Logic -->
   <script>
     const STORAGE_KEY = 'moon_star_tailors_orders';
+    const API_URL_KEY = 'moon_star_tailors_api_url';
     let orders = [];
+    let apiUrl = localStorage.getItem(API_URL_KEY) || '';
 
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
+      updateCloudBtnStatus();
       loadOrders();
       // Set default due date to 7 days from now
       const defaultDate = new Date();
       defaultDate.setDate(defaultDate.getDate() + 7);
       document.getElementById('due-date').value = defaultDate.toISOString().split('T')[0];
     });
+
+    function updateCloudBtnStatus() {
+      const btn = document.getElementById('cloud-btn');
+      const icon = document.getElementById('cloud-icon');
+      const label = document.getElementById('cloud-label');
+      if (apiUrl) {
+        btn.classList.remove('text-gold');
+        btn.classList.add('text-green-400', 'border-green-500/30');
+        icon.textContent = '☁️';
+        label.textContent = 'Cloud Active';
+      } else {
+        btn.classList.remove('text-green-400', 'border-green-500/30');
+        btn.classList.add('text-gold');
+        icon.textContent = '☁️';
+        label.textContent = 'Cloud Sync';
+      }
+    }
+
+    function openCloudModal() {
+      document.getElementById('api-url-input').value = apiUrl;
+      const pushBtn = document.getElementById('push-all-btn');
+      if (apiUrl) {
+        pushBtn.classList.remove('hidden');
+      } else {
+        pushBtn.classList.add('hidden');
+      }
+      document.getElementById('cloud-modal').classList.remove('hidden');
+      document.getElementById('cloud-modal').classList.add('flex');
+    }
+
+    function closeCloudModal() {
+      document.getElementById('cloud-modal').classList.add('hidden');
+      document.getElementById('cloud-modal').classList.remove('flex');
+    }
+
+    function saveCloudSetup() {
+      const input = document.getElementById('api-url-input').value.trim();
+      apiUrl = input;
+      localStorage.setItem(API_URL_KEY, apiUrl);
+      updateCloudBtnStatus();
+      closeCloudModal();
+      if (apiUrl) {
+        fetchFromCloud();
+      }
+    }
+
+    function disconnectCloud() {
+      apiUrl = '';
+      localStorage.removeItem(API_URL_KEY);
+      document.getElementById('api-url-input').value = '';
+      updateCloudBtnStatus();
+      closeCloudModal();
+      alert('Disconnected from Google Sheets. App will use device LocalStorage.');
+    }
+
+    function fetchFromCloud() {
+      if (!apiUrl) return;
+      document.getElementById('cloud-label').textContent = 'Syncing...';
+      fetch(apiUrl)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.status === 'success' && Array.isArray(data.orders)) {
+            if (data.orders.length > 0) {
+              orders = data.orders;
+              saveToStorage(false); // don't push back to cloud while fetching
+            }
+            document.getElementById('cloud-label').textContent = 'Cloud Active';
+          } else {
+            console.warn('Cloud fetch warning:', data);
+            document.getElementById('cloud-label').textContent = 'Cloud Active';
+          }
+        })
+        .catch(err => {
+          console.error('Cloud fetch error:', err);
+          document.getElementById('cloud-label').textContent = 'Offline Mode';
+        });
+    }
+
+    function syncAllToCloud() {
+      if (!apiUrl) return;
+      if (!confirm('This will upload all your current local orders to your Google Sheet. Proceed?')) return;
+      
+      document.getElementById('cloud-label').textContent = 'Uploading...';
+      fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'sync_all', orders: orders })
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert('All orders pushed to Google Sheets successfully!');
+        document.getElementById('cloud-label').textContent = 'Cloud Active';
+        closeCloudModal();
+      })
+      .catch(err => {
+        alert('Error syncing to Google Sheets: ' + err.message);
+        document.getElementById('cloud-label').textContent = 'Cloud Active';
+      });
+    }
 
     function loadOrders() {
       const data = localStorage.getItem(STORAGE_KEY);
@@ -394,9 +538,25 @@
       renderOrders();
     }
 
-    function saveToStorage() {
+    function saveToStorage(pushToCloud = true) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
       renderOrders();
+      if (pushToCloud && apiUrl) {
+        document.getElementById('cloud-label').textContent = 'Saving...';
+        fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'sync_all', orders: orders })
+        })
+        .then(res => res.json())
+        .then(() => {
+          document.getElementById('cloud-label').textContent = 'Cloud Active';
+        })
+        .catch(err => {
+          console.error('Cloud save error:', err);
+          document.getElementById('cloud-label').textContent = 'Offline Mode';
+        });
+      }
     }
 
     function calcBalance() {
@@ -602,6 +762,13 @@
       if (confirm(`Are you sure you want to delete order ${id}?`)) {
         orders = orders.filter(o => o.id !== id);
         saveToStorage();
+        if (apiUrl) {
+          fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'delete', id: id })
+          }).catch(console.error);
+        }
       }
     }
 
