@@ -362,87 +362,115 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-20">
           
-          <!-- Logo & Brand -->
-          <a href="#home" class="flex items-center gap-2 group" aria-label="Moon Star Tailors Home">
-            <span class="text-2xl" aria-hidden="true">🌙⭐</span>
-            <div>
-              <span class="font-display text-xl sm:text-2xl text-gold group-hover:text-gold-light transition-colors duration-300">Moon Star</span>
-              <span class="font-display text-xl sm:text-2xl text-gold-light/75 ml-1">Tailors</span>
-              <p class="text-[10px] text-muted tracking-widest uppercase hidden sm:block">Rasoolpura · Begumpet · Est. 1988</p>
+          <!-- Brand Logo: Elegant bespoke emblem & clean typography -->
+          <a href="#home" class="flex items-center gap-3 group" aria-label="Moon Star Tailors - Home">
+            <div class="w-10 h-10 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center text-gold group-hover:border-gold group-hover:bg-gold/20 transition-all flex-shrink-0">
+              <svg class="w-5 h-5 text-gold" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                <path d="M18 5C12.477 5 8 9.477 8 15s4.477 10 10 10c2.44 0 4.686-.872 6.44-2.327C20.84 21.484 18 17.57 18 13c0-3.32 1.543-6.279 3.94-8.196C20.72 5.305 19.39 5 18 5z" fill="#c9a84c"/>
+                <polygon points="23,3 24.2,6.8 28,8 24.2,9.2 23,13 21.8,9.2 18,8 21.8,6.8" fill="#e8d5a3"/>
+              </svg>
+            </div>
+            <div class="flex flex-col">
+              <div class="flex items-baseline gap-1.5 leading-none">
+                <span class="font-display text-xl sm:text-2xl font-bold tracking-tight text-gold group-hover:text-gold-light transition-colors">Moon Star</span>
+                <span class="font-display text-lg sm:text-xl text-warm font-normal">Tailors</span>
+              </div>
+              <span class="text-[9px] uppercase tracking-[0.22em] text-muted mt-1 hidden sm:block">Rasoolpura · Begumpet · Est. 1988</span>
             </div>
           </a>
           
-          <!-- Desktop Navigation Links -->
-          <ul class="hidden xl:flex items-center gap-7">
-            <li><a href="#uniforms" class="text-xs uppercase tracking-wider text-muted hover:text-gold transition-colors">Uniform Stitching</a></li>
-            <li><a href="#quotation" class="text-xs uppercase tracking-wider text-muted hover:text-gold transition-colors">Get Quotation</a></li>
-            <li><a href="#individual-services" class="text-xs uppercase tracking-wider text-muted hover:text-gold transition-colors">Individual Tailoring</a></li>
-            <li><a href="#portfolio" class="text-xs uppercase tracking-wider text-muted hover:text-gold transition-colors">Samples &amp; Work</a></li>
-            <li><a href="#about" class="text-xs uppercase tracking-wider text-muted hover:text-gold transition-colors">Our Story</a></li>
-            <li><a href="#contact" class="text-xs uppercase tracking-wider text-muted hover:text-gold transition-colors">Contact</a></li>
+          <!-- Desktop Navigation Links: 5 clean, uncluttered, balanced links -->
+          <ul class="hidden lg:flex items-center gap-7">
+            <li><a href="#uniforms" class="text-xs uppercase tracking-wider text-muted hover:text-gold transition-colors font-medium py-1">Uniforms</a></li>
+            <li><a href="#individual-services" class="text-xs uppercase tracking-wider text-muted hover:text-gold transition-colors font-medium py-1">Bespoke</a></li>
+            <li><a href="#portfolio" class="text-xs uppercase tracking-wider text-muted hover:text-gold transition-colors font-medium py-1">Samples</a></li>
+            <li><a href="#about" class="text-xs uppercase tracking-wider text-muted hover:text-gold transition-colors font-medium py-1">Our Story</a></li>
+            <li><a href="#contact" class="text-xs uppercase tracking-wider text-muted hover:text-gold transition-colors font-medium py-1">Contact</a></li>
           </ul>
           
-          <!-- Header Direct Conversion CTAs -->
-          <div class="hidden md:flex items-center gap-3">
-            <!-- Direct Phone Call CTA -->
+          <!-- Desktop Direct Conversion Actions -->
+          <div class="hidden lg:flex items-center gap-3">
+            <!-- Subtle Call Shop Link/Pill -->
             <a href="tel:+919885030824"
                onclick="trackGAEvent('call_shop', 'Header', 'Navbar Call Button')"
-               class="inline-flex items-center gap-2 border border-gold/30 text-gold-light hover:border-gold hover:bg-gold/10 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider transition-all">
+               class="inline-flex items-center gap-1.5 text-xs text-warm-dim hover:text-gold border border-gold/30 hover:border-gold/60 px-3.5 py-2 rounded-full font-medium transition-colors">
               <svg class="w-3.5 h-3.5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
               <span>Call Shop</span>
             </a>
 
-            <!-- Primary Quotation CTA -->
+            <!-- Primary High-Contrast Quotation CTA Button -->
             <a href="#quotation" 
-               class="inline-flex items-center gap-2 bg-gradient-to-r from-gold to-gold-light text-night font-bold px-5 py-2.5 rounded-full hover:shadow-lg hover:shadow-gold/25 transition-all duration-300 text-xs uppercase tracking-wider">
+               class="inline-flex items-center gap-1.5 bg-gradient-to-r from-gold via-gold-light to-gold text-night font-bold px-5 py-2 rounded-full hover:shadow-lg hover:shadow-gold/25 hover:scale-[1.02] transition-all duration-200 text-xs uppercase tracking-wider">
               <span>Get Quotation</span>
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+              <svg class="w-3.5 h-3.5 text-night" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
             </a>
           </div>
           
-          <!-- Mobile Menu Toggle Button -->
-          <button id="mobile-toggle" class="xl:hidden flex flex-col gap-1.5 p-2.5 rounded-lg border border-gold/20" aria-label="Toggle navigation menu">
-            <span class="block w-6 h-0.5 bg-gold transition-all duration-300"></span>
-            <span class="block w-6 h-0.5 bg-gold transition-all duration-300"></span>
-            <span class="block w-4 h-0.5 bg-gold transition-all duration-300 ml-auto"></span>
-          </button>
+          <!-- Mobile / Tablet Action Icons (Clean & Symmetrical) -->
+          <div class="flex lg:hidden items-center gap-2">
+            <!-- Direct Mobile Call Icon -->
+            <a href="tel:+919885030824"
+               onclick="trackGAEvent('call_shop', 'Header', 'Mobile Top Bar Call')"
+               class="w-10 h-10 rounded-full bg-night-card border border-gold/30 text-gold hover:border-gold flex items-center justify-center transition-colors"
+               aria-label="Call Shop">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+            </a>
+
+            <!-- Hamburger Drawer Toggle -->
+            <button id="mobile-toggle" 
+                    class="w-10 h-10 rounded-full bg-night-card border border-gold/30 text-gold hover:border-gold flex flex-col justify-center items-center gap-1 transition-colors" 
+                    aria-label="Toggle navigation menu">
+              <span class="block w-4 h-0.5 bg-gold transition-all duration-300"></span>
+              <span class="block w-4 h-0.5 bg-gold transition-all duration-300"></span>
+              <span class="block w-2.5 h-0.5 bg-gold transition-all duration-300 ml-auto"></span>
+            </button>
+          </div>
+
         </div>
       </div>
       
       <!-- Mobile Slide-out Menu Drawer -->
-      <div id="mobile-menu" class="mobile-menu fixed top-0 right-0 w-80 max-w-[85vw] h-full bg-night-light/98 backdrop-blur-2xl border-l border-gold/20 z-50 p-6 pt-20 xl:hidden overflow-y-auto">
-        <button id="mobile-close" class="absolute top-5 right-5 text-muted hover:text-gold text-3xl" aria-label="Close navigation menu">&times;</button>
+      <div id="mobile-menu" class="mobile-menu fixed top-0 right-0 w-80 max-w-[85vw] h-full bg-night-light/98 backdrop-blur-2xl border-l border-gold/20 z-50 p-6 pt-16 lg:hidden overflow-y-auto">
+        <button id="mobile-close" class="absolute top-5 right-5 text-muted hover:text-gold w-8 h-8 flex items-center justify-center rounded-full bg-night-card border border-gold/20 text-xl" aria-label="Close menu">&times;</button>
         
-        <div class="mb-6 pb-4 border-b border-gold/10">
-          <p class="font-display text-lg text-gold">Moon Star Tailors</p>
-          <p class="text-xs text-muted">Rasoolpura, Begumpet · Est. 1988</p>
+        <div class="mb-8 pb-4 border-b border-gold/15 flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-gold" viewBox="0 0 32 32" fill="none">
+              <path d="M18 5C12.477 5 8 9.477 8 15s4.477 10 10 10c2.44 0 4.686-.872 6.44-2.327C20.84 21.484 18 17.57 18 13c0-3.32 1.543-6.279 3.94-8.196C20.72 5.305 19.39 5 18 5z" fill="#c9a84c"/>
+              <polygon points="23,3 24.2,6.8 28,8 24.2,9.2 23,13 21.8,9.2 18,8 21.8,6.8" fill="#e8d5a3"/>
+            </svg>
+          </div>
+          <div>
+            <p class="font-display text-base font-bold text-gold">Moon Star Tailors</p>
+            <p class="text-[10px] text-muted uppercase tracking-wider">Rasoolpura · Begumpet · Est. 1988</p>
+          </div>
         </div>
 
-        <ul class="flex flex-col gap-5 text-base">
-          <li><a href="#home" class="mobile-link text-warm hover:text-gold block py-1 font-medium">Home</a></li>
-          <li><a href="#uniforms" class="mobile-link text-warm hover:text-gold block py-1 font-medium">Business &amp; Uniform Stitching</a></li>
-          <li><a href="#quotation" class="mobile-link text-gold font-semibold block py-1">Request a Quotation</a></li>
-          <li><a href="#individual-services" class="mobile-link text-warm hover:text-gold block py-1 font-medium">Individual Men's Tailoring</a></li>
-          <li><a href="#portfolio" class="mobile-link text-warm hover:text-gold block py-1 font-medium">Samples &amp; Work</a></li>
-          <li><a href="#about" class="mobile-link text-warm hover:text-gold block py-1 font-medium">Our Story</a></li>
-          <li><a href="#contact" class="mobile-link text-warm hover:text-gold block py-1 font-medium">Contact &amp; Location</a></li>
+        <ul class="flex flex-col gap-4 text-sm">
+          <li><a href="#home" class="mobile-link text-warm hover:text-gold block py-1.5 font-medium transition-colors">Home</a></li>
+          <li><a href="#uniforms" class="mobile-link text-warm hover:text-gold block py-1.5 font-medium transition-colors">Business Uniforms</a></li>
+          <li><a href="#quotation" class="mobile-link text-gold font-semibold block py-1.5 transition-colors">Get a Quotation</a></li>
+          <li><a href="#individual-services" class="mobile-link text-warm hover:text-gold block py-1.5 font-medium transition-colors">Bespoke Men's Wear</a></li>
+          <li><a href="#portfolio" class="mobile-link text-warm hover:text-gold block py-1.5 font-medium transition-colors">Samples &amp; Work</a></li>
+          <li><a href="#about" class="mobile-link text-warm hover:text-gold block py-1.5 font-medium transition-colors">Our Story</a></li>
+          <li><a href="#contact" class="mobile-link text-warm hover:text-gold block py-1.5 font-medium transition-colors">Contact &amp; Location</a></li>
         </ul>
 
         <div class="mt-8 pt-6 border-t border-gold/15 space-y-3">
           <a href="tel:+919885030824" 
              onclick="trackGAEvent('call_shop', 'Mobile_Menu', 'Drawer Call Button')"
-             class="w-full inline-flex items-center justify-center gap-2 border border-gold/40 text-gold-light py-3 rounded-full text-sm font-semibold">
+             class="w-full inline-flex items-center justify-center gap-2 border border-gold/40 text-gold-light py-3 rounded-full text-xs font-semibold hover:border-gold transition-colors">
             <svg class="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-            Call +91 98850 30824
+            <span>Call +91 98850 30824</span>
           </a>
           
           <a href="https://wa.me/919885030824?text=Hello%20Moon%20Star%20Tailors%2C%20I%20would%20like%20to%20request%20a%20quotation%20for%20tailoring%20%2F%20uniform%20stitching."
              target="_blank"
              rel="noopener noreferrer"
              onclick="trackGAEvent('click_whatsapp', 'Mobile_Menu', 'Drawer WhatsApp Button')"
-             class="w-full inline-flex items-center justify-center gap-2 bg-gold text-night py-3 rounded-full text-sm font-bold shadow-md">
+             class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-gold to-gold-light text-night py-3 rounded-full text-xs font-bold shadow-md hover:shadow-gold/20 transition-all">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.555 4.122 1.528 5.855L.06 23.487a.5.5 0 00.612.612l5.632-1.468A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.94 0-3.76-.562-5.295-1.531l-.38-.226-3.93 1.024 1.024-3.93-.226-.38A9.96 9.96 0 012 12C2 6.486 6.486 2 12 2s10 4.486 10 10-4.486 10-10 10z"/></svg>
-            WhatsApp Quotation
+            <span>WhatsApp Quotation</span>
           </a>
         </div>
       </div>
@@ -1434,9 +1462,17 @@
         
         <!-- Brand Summary -->
         <div class="md:col-span-2">
-          <div class="flex items-center gap-2 mb-3">
-            <span class="text-2xl" aria-hidden="true">🌙⭐</span>
-            <span class="font-display text-xl text-gold font-bold">Moon Star Tailors</span>
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-9 h-9 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-gold" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                <path d="M18 5C12.477 5 8 9.477 8 15s4.477 10 10 10c2.44 0 4.686-.872 6.44-2.327C20.84 21.484 18 17.57 18 13c0-3.32 1.543-6.279 3.94-8.196C20.72 5.305 19.39 5 18 5z" fill="#c9a84c"/>
+                <polygon points="23,3 24.2,6.8 28,8 24.2,9.2 23,13 21.8,9.2 18,8 21.8,6.8" fill="#e8d5a3"/>
+              </svg>
+            </div>
+            <div class="flex items-baseline gap-1.5 leading-none">
+              <span class="font-display text-xl font-bold tracking-tight text-gold">Moon Star</span>
+              <span class="font-display text-lg text-warm font-normal">Tailors</span>
+            </div>
           </div>
           <p class="text-muted text-xs leading-relaxed max-w-sm mb-4">
             Established men's tailor in Rasoolpura, Begumpet, Hyderabad since 1988. Dedicated to custom clothing, staff uniform stitching, and precision alterations.
